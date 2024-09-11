@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@types/react-big-calendar": "^1.8.10",
+    "@types/react-router-dom": "^5.3.3",
+    "date-fns": "^3.6.0",
+    "react": "18",
+    "react-big-calendar": "^1.13.4",
+    "react-dom": "18",
+    "react-router-dom": "6"
+  }
+}
