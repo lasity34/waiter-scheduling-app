@@ -194,4 +194,5 @@ const WaiterDashboard: React.FC = () => {
   );
 };
 
+
 export default WaiterDashboard;
