@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, momentLocalizer, SlotInfo } from 'react-big-calendar';
 import moment from 'moment';
-import axios from 'axios';
 import styled from 'styled-components';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useNavigate } from 'react-router-dom';
+import { fetchShifts, createShift, logout } from '../api';
 
 const localizer = momentLocalizer(moment);
 
@@ -74,12 +74,12 @@ const WaiterDashboard: React.FC = () => {
   const currentUserId = parseInt(localStorage.getItem('userId') || '0');
 
   useEffect(() => {
-    fetchShifts();
+    fetchUserShifts();
   }, []);
 
-  const fetchShifts = async () => {
+  const fetchUserShifts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/shifts');
+      const response = await fetchShifts();
       const formattedShifts = response.data.map((shift: any) => ({
         id: shift.id,
         title: `${shift.user_name} - ${shift.shift_type}`,
@@ -90,8 +90,9 @@ const WaiterDashboard: React.FC = () => {
         shiftType: shift.shift_type
       }));
       setShifts(formattedShifts);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching shifts:', error);
+      alert(error.response?.data?.message || 'An error occurred while fetching shifts');
     }
   };
 
@@ -130,7 +131,7 @@ const WaiterDashboard: React.FC = () => {
     }
 
     try {
-      await axios.post('http://localhost:5000/shifts', {
+      await createShift({
         date: shiftDate.format('YYYY-MM-DD'),
         start_time: startTime,
         end_time: endTime,
@@ -138,23 +139,23 @@ const WaiterDashboard: React.FC = () => {
       });
 
       alert('Shift added successfully');
-      fetchShifts();
+      fetchUserShifts();
       setShiftModal({ isOpen: false, date: null });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding shift:', error);
-      alert('Failed to add shift');
+      alert(error.response?.data?.message || 'Failed to add shift');
     }
   };
 
   const handleLogout = async () => {
     try {
-      await axios.get('http://localhost:5000/logout');
+      await logout();
       localStorage.removeItem('user');
       localStorage.removeItem('userId');
       navigate('/', { state: { message: 'You have been successfully logged out.' } });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error logging out:', error);
-      alert('Failed to log out');
+      alert(error.response?.data?.message || 'Failed to log out');
     }
   };
 
@@ -193,6 +194,5 @@ const WaiterDashboard: React.FC = () => {
     </DashboardContainer>
   );
 };
-
 
 export default WaiterDashboard;
