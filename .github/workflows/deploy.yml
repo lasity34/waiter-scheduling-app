@@ -36,6 +36,21 @@ jobs:
     - name: Deploy to S3
       run: aws s3 sync waiter-app-frontend/build/ s3://waiter-app-frontend --delete
 
+    - name: Check CloudFront Permissions
+      id: check_cloudfront_permissions
+      run: |
+        if aws cloudfront get-distribution --id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} &> /dev/null; then
+          echo "::set-output name=has_permission::true"
+        else
+          echo "::set-output name=has_permission::false"
+        fi
+
     - name: Invalidate CloudFront
+      if: steps.check_cloudfront_permissions.outputs.has_permission == 'true'
       run: |
         aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+
+    - name: CloudFront Invalidation Warning
+      if: steps.check_cloudfront_permissions.outputs.has_permission == 'false'
+      run: |
+        echo "Warning: Unable to invalidate CloudFront distribution. Please check your IAM permissions."
