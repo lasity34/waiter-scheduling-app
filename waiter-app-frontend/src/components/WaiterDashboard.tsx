@@ -107,7 +107,7 @@ const WaiterDashboard: React.FC = () => {
       setShiftModal({ isOpen: true, date: slotInfo.start });
     }
   };
-
+ 
   const handleAddShift = async (shiftType: 'morning' | 'evening' | 'double') => {
     if (!shiftModal.date) return;
 
