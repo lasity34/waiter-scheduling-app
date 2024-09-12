@@ -299,6 +299,11 @@ def init_db():
 # Call init_db function
 init_db()
 
+@app.route('/')
+def index():
+    return jsonify({'message': 'Welcome to the Waiter Scheduling App'}), 200
+
+
 
 @app.route('/db-test')
 def db_test():

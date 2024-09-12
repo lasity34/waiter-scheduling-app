@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import axios from 'axios';
+import { login } from '../api';
 
 const SignInContainer = styled.div`
   display: flex;
@@ -70,29 +70,16 @@ const SignIn: React.FC = () => {
     e.preventDefault();
     setError('');
     try {
-      const response = await axios.post('http://localhost:5000/login', 
-        { email, password },
-        { 
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        }
-      );
+      const response = await login(email, password);
       console.log('Sign in successful:', response.data);
       
-      // Store the user's role and any other relevant info in localStorage or a state management solution
       localStorage.setItem('userRole', response.data.role);
       localStorage.setItem('userName', response.data.name);
+      localStorage.setItem('userId', response.data.id.toString());
 
-      // Redirect based on role
       navigate(response.data.role === 'waiter' ? '/waiter-dashboard' : '/manager-dashboard');
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        setError(error.response.data.message || 'An error occurred during sign in');
-      } else {
-        setError('An unexpected error occurred');
-      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'An unexpected error occurred');
       console.error('Sign in error:', error);
     }
   };

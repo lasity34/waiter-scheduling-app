@@ -5,6 +5,8 @@ import axios from 'axios';
 import styled from 'styled-components';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useNavigate } from 'react-router-dom';
+import { fetchShifts, fetchUsers, createUser, updateUser, deleteUser, logout, createShift, updateShift, deleteShift } from '../api';
+
 // Set default axios configuration
 axios.defaults.withCredentials = true;
 
@@ -281,14 +283,13 @@ const ManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchShifts();
-    fetchUsers();
-    fetchWaiters();
+    fetchShiftsData();
+    fetchUsersData();
   }, []);
 
-  const fetchShifts = async () => {
+  const fetchShiftsData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/shifts');
+      const response = await fetchShifts();
       const formattedShifts = response.data.map((shift: any) => ({
         id: shift.id,
         title: `${shift.user_name} - ${shift.shift_type}`,
@@ -304,32 +305,24 @@ const ManagerDashboard: React.FC = () => {
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchUsersData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/users');
+      const response = await fetchUsers();
       setUsers(response.data);
+      setWaiters(response.data.filter((user: User) => user.role === 'waiter'));
     } catch (error) {
       console.error('Error fetching users:', error);
     }
   };
 
-  const fetchWaiters = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/users');
-      setWaiters(response.data.filter((user: User) => user.role === 'waiter'));
-    } catch (error) {
-      console.error('Error fetching waiters:', error);
-    }
-  };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/users', newUser);
+      await createUser(newUser);
       alert('User created successfully');
       setNewUser({ name: '', email: '', password: '', role: 'waiter' });
-      fetchUsers();
-      fetchWaiters();
+      fetchUsersData(); // This will update both users and waiters
     } catch (error) {
       console.error('Error creating user:', error);
       alert('Failed to create user');
@@ -349,14 +342,13 @@ const ManagerDashboard: React.FC = () => {
 
     try {
       if (confirmation.action === 'remove') {
-        await axios.delete(`http://localhost:5000/users/${confirmation.userId}`);
+        await deleteUser(confirmation.userId);
         alert('User has been removed successfully');
       } else if (confirmation.action === 'toggle' && confirmation.newRole) {
-        await axios.put(`http://localhost:5000/users/${confirmation.userId}`, { role: confirmation.newRole });
+        await updateUser(confirmation.userId, { role: confirmation.newRole });
         alert(`User's role has been updated to ${confirmation.newRole}`);
       }
-      fetchUsers();
-      fetchWaiters();
+      fetchUsersData(); // This will update both users and waiters
     } catch (error) {
       console.error('Error performing action:', error);
       alert('Failed to perform action');
@@ -399,7 +391,7 @@ const ManagerDashboard: React.FC = () => {
     }
 
     try {
-      await axios.post('http://localhost:5000/shifts', {
+      await createShift({
         user_id: shiftModal.selectedWaiter,
         date: shiftDate.format('YYYY-MM-DD'),
         start_time: startTime,
@@ -408,7 +400,7 @@ const ManagerDashboard: React.FC = () => {
       });
 
       alert('Shift added successfully');
-      fetchShifts();
+      fetchShiftsData();
       setShiftModal({ isOpen: false, date: null, selectedWaiter: null, shiftType: null });
     } catch (error) {
       console.error('Error adding shift:', error);
@@ -440,12 +432,12 @@ const ManagerDashboard: React.FC = () => {
     }
 
     try {
-      await axios.put(`http://localhost:5000/shifts/${editShiftModal.shift.id}`, {
+      await updateShift(editShiftModal.shift.id, {
         shift_type: newShiftType,
         start_time: startTime,
         end_time: endTime
       });
-      fetchShifts();
+      fetchShiftsData();
       setEditShiftModal({ isOpen: false, shift: null });
     } catch (error) {
       console.error('Error updating shift:', error);
@@ -473,22 +465,22 @@ const ManagerDashboard: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.get('http://localhost:5000/logout');
+      await logout();
       localStorage.removeItem('user');
+      localStorage.removeItem('userId');
       navigate('/', { state: { message: 'You have been successfully logged out.' } });
     } catch (error) {
       console.error('Error logging out:', error);
       alert('Failed to log out');
     }
   };
-  
 
   const handleRemoveShift = async () => {
     if (!editShiftModal.shift) return;
 
     try {
-      await axios.delete(`http://localhost:5000/shifts/${editShiftModal.shift.id}`);
-      fetchShifts();
+      await deleteShift(editShiftModal.shift.id);
+      fetchShiftsData();
       setEditShiftModal({ isOpen: false, shift: null });
       alert('Shift removed successfully');
     } catch (error) {
