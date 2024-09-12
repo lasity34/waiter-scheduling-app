@@ -33,8 +33,7 @@ jobs:
         REACT_APP_API_BASE_URL: 'https://d1ozcmsi9wy8ty.cloudfront.net'
 
     - name: Deploy to S3
-      run: aws s3 sync waiter-app-frontend/build/ s3://waiter-app-frontend 
- --delete
+      run: aws s3 sync waiter-app-frontend/build/ s3://waiter-app-frontend --delete
 
     - name: Invalidate CloudFront
       run: |
