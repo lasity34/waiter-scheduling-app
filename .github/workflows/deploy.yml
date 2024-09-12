@@ -1,9 +1,11 @@
-name: Deploy to S3
+name: Deploy Frontend to S3 and CloudFront
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'waiter-app-frontend/**'
 
 jobs:
   deploy:
@@ -16,18 +18,23 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1  # Make sure this matches your S3 bucket's region
+        aws-region: eu-north-1  # Make sure this matches your S3 bucket's region
 
     - name: Install Dependencies
-      run: yarn install --frozen-lockfile
+      run: |
+        cd waiter-app-frontend
+        yarn install --frozen-lockfile
 
     - name: Build
-      run: yarn build
+      run: |
+        cd waiter-app-frontend
+        yarn build
       env:
         REACT_APP_API_BASE_URL: 'https://d1ozcmsi9wy8ty.cloudfront.net'
 
     - name: Deploy to S3
-      run: aws s3 sync build/ s3://your-bucket-name --delete
+      run: aws s3 sync waiter-app-frontend/build/ s3://waiter-app-frontend 
+ --delete
 
     - name: Invalidate CloudFront
       run: |
