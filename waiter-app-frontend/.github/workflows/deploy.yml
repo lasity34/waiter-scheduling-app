@@ -3,7 +3,7 @@ name: Deploy to S3
 on:
   push:
     branches:
-      - main  # or your default branch name
+      - main
 
 jobs:
   deploy:
@@ -16,17 +16,18 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1  # replace with your AWS region
+        aws-region: us-east-1  # Make sure this matches your S3 bucket's region
 
     - name: Install Dependencies
-      run: npm ci
+      run: yarn install --frozen-lockfile
 
     - name: Build
-      run: npm run build
+      run: yarn build
+      env:
+        REACT_APP_API_BASE_URL: 'https://d1ozcmsi9wy8ty.cloudfront.net'
 
     - name: Deploy to S3
-      run: aws s3 sync build/ s3://waiter-app-frontend 
- --delete
+      run: aws s3 sync build/ s3://your-bucket-name --delete
 
     - name: Invalidate CloudFront
       run: |
