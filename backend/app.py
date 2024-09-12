@@ -1,4 +1,5 @@
 import os
+import logging
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -9,15 +10,25 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from sqlalchemy.orm import joinedload
 
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
+
+logger.info("Starting application initialization")
+
 # Load environment variables
 load_dotenv()
+logger.info("Environment variables loaded")
 
 # Initialize Flask app
 app = Flask(__name__)
+logger.info("Flask app initialized")
 
 # Configuration
+logger.info("Starting app configuration")
 if 'RDS_HOSTNAME' in os.environ:
     # Elastic Beanstalk environment
+    logger.info("Configuring for Elastic Beanstalk environment")
     POSTGRES = {
         'user': os.environ['RDS_USERNAME'],
         'pw': os.environ['RDS_PASSWORD'],
@@ -28,6 +39,7 @@ if 'RDS_HOSTNAME' in os.environ:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s' % POSTGRES
 else:
     # Local environment
+    logger.info("Configuring for local environment")
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -35,19 +47,26 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # Ensure SECRET_KEY is set
 if not app.config['SECRET_KEY']:
+    logger.error("No SECRET_KEY set for Flask application")
     raise ValueError("No SECRET_KEY set for Flask application")
 
+logger.info("App configuration completed")
 
 # Initialize extensions
+logger.info("Initializing database")
 db = SQLAlchemy(app)
+logger.info("Initializing migrations")
 migrate = Migrate(app, db)
+logger.info("Initializing login manager")
 login_manager = LoginManager(app)
 
 # Update CORS configuration
+logger.info("Configuring CORS")
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 @app.after_request
 def after_request(response):
+    logger.debug("Processing after_request")
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
@@ -55,6 +74,7 @@ def after_request(response):
     return response
 
 # Models
+logger.info("Defining models")
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -78,9 +98,11 @@ class Shift(db.Model):
     status = db.Column(db.String(20), default='requested')
     shift_type = db.Column(db.String(20), nullable=False)  # 'morning', 'evening', or 'double'
 
+logger.info("Models defined")
 
 @app.route('/test')
 def test_route():
+    logger.debug("Test route accessed")
     if current_user.is_authenticated:
         return jsonify({'message': 'Authenticated', 'user': current_user.email}), 200
     else:
@@ -89,24 +111,28 @@ def test_route():
 # Login manager
 @login_manager.user_loader
 def load_user(user_id):
+    logger.debug(f"Loading user {user_id}")
     return User.query.get(int(user_id))
 
 # Routes
 @app.route('/login', methods=['POST', 'OPTIONS'])
 def login():
+    logger.debug("Login route accessed")
     if request.method == 'OPTIONS':
         return '', 200
     data = request.json
-    print("Received login request:", data)  # Debug print
+    logger.info(f"Received login request for email: {data.get('email')}")
     user = User.query.filter_by(email=data['email']).first()
     if user and user.check_password(data['password']):
         login_user(user)
+        logger.info(f"User {user.email} logged in successfully")
         return jsonify({
             'message': 'Logged in successfully',
             'role': user.role,
             'name': user.name,
             'id': user.id
         })
+    logger.warning(f"Failed login attempt for email: {data.get('email')}")
     return jsonify({'message': 'Invalid email or password'}), 401
 
 @app.route('/logout')
@@ -256,6 +282,7 @@ def manage_shift(shift_id):
 
 # Database initialization and admin user creation
 def init_db():
+    logger.info("Initializing database")
     with app.app_context():
         db.create_all()
         if not User.query.filter_by(email=os.getenv('ADMIN_EMAIL')).first():
@@ -267,10 +294,24 @@ def init_db():
             admin_user.set_password(os.getenv('ADMIN_PASSWORD'))
             db.session.add(admin_user)
             db.session.commit()
-            print("Admin user created successfully.")
+            logger.info("Admin user created successfully")
 
 # Call init_db function
 init_db()
+
+
+@app.route('/db-test')
+def db_test():
+    logger.debug("Database test route accessed")
+    try:
+        db.session.execute('SELECT 1')
+        logger.info("Database connection test successful")
+        return 'Database connection successful', 200
+    except Exception as e:
+        logger.error(f"Database connection test failed: {str(e)}")
+        return f'Database connection failed: {str(e)}', 500
+
+logger.info("Application setup completed")
 
 # Main
 if __name__ == '__main__':

@@ -37,3 +37,4 @@ Elastic Beanstalk Files
 Miscellaneous
 config.py
 secrets.json
+.history/
