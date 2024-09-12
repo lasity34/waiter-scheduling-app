@@ -18,12 +18,13 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-north-1  # Make sure this matches your S3 bucket's region
+        aws-region: eu-north-1
 
     - name: Install Dependencies
       run: |
         cd waiter-app-frontend
         yarn install --frozen-lockfile
+        yarn add @types/react-big-calendar
 
     - name: Build
       run: |
