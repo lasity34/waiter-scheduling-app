@@ -107,7 +107,6 @@ const SignIn: React.FC = () => {
     }
   };
 
-
   return (
     <SignInContainer>
       <Header>{role === 'waiter' ? 'Waiter' : 'Manager'} Sign In</Header>
