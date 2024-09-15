@@ -71,37 +71,24 @@ const SignIn: React.FC = () => {
     setError('');
     try {
       const response = await login(email, password);
-      console.log('Full response:', response);
-      console.log('Response data:', response.data);
+      console.log('Login response:', response);
 
-      if (response.data && typeof response.data === 'object') {
-        const { role, name, id } = response.data;
-        
-        if (role && name && id) {
-          localStorage.setItem('userRole', role);
-          localStorage.setItem('userName', name);
-          localStorage.setItem('userId', id.toString());
+      if (response.data && response.data.role) {
+        localStorage.setItem('userRole', response.data.role);
+        localStorage.setItem('userName', response.data.name);
+        localStorage.setItem('userId', response.data.id.toString());
 
-          navigate(role === 'waiter' ? '/waiter-dashboard' : '/manager-dashboard');
-        } else {
-          console.error('Missing required data in response:', response.data);
-          setError('Incomplete data received from server');
-        }
+        navigate(response.data.role === 'waiter' ? '/waiter-dashboard' : '/manager-dashboard');
       } else {
-        console.error('Unexpected response data format:', response.data);
-        setError('Unexpected response from server');
+        setError('Invalid response from server');
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
       if (error.response) {
-        console.error('Error response:', error.response);
-        console.error('Error response data:', error.response.data);
         setError(error.response.data?.message || 'An error occurred during sign in');
       } else if (error.request) {
-        console.error('No response received:', error.request);
         setError('No response received from server');
       } else {
-        console.error('Error message:', error.message);
         setError('An unexpected error occurred');
       }
     }

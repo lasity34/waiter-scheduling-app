@@ -4,7 +4,11 @@ import { API_URL } from '../config';
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
+
 
 const logAndThrowError = (error: any) => {
   console.error('API Error:', error.response || error);
