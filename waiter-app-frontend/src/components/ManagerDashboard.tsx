@@ -958,12 +958,12 @@ const renderWeekView = () => {
   return (
     <DashboardContainer>
       <HeaderContainer>
-        <Header>Manager Dashboard</Header>
+        <Header>Managers Dashboard</Header>
         <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
       </HeaderContainer>
       <ContentContainer>
         <SidePanel>
-          <h3>Create New User</h3>
+          <h3>Create User</h3>
           <Form onSubmit={handleCreateUser}>
             <Input
               type="text"
