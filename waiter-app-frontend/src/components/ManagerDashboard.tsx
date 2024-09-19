@@ -121,12 +121,18 @@ const CalendarBody = styled.div`
   flex-direction: column;
 `;
 
+
 const WeekViewContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
   overflow-x: auto;
   border: 1px solid #ddd;
+  font-size: 14px;
+
+  @media (max-width: 325px) {
+    font-size: 12px;
+  }
 `;
 
 const WeekHeader = styled.div`
@@ -138,12 +144,11 @@ const WeekHeader = styled.div`
   z-index: 1;
 `;
 
-// Update the WeekDayHeader styled component
 const WeekDayHeader = styled.div`
   flex: 1;
   text-align: center;
-  padding: 5px;
-  min-width: 40px;
+  padding: 5px 2px;
+  min-width: 30px;
   cursor: pointer;
   transition: background-color 0.3s;
   border-right: 1px solid #ddd;
@@ -155,11 +160,20 @@ const WeekDayHeader = styled.div`
   &:hover {
     background-color: #e6e6e6;
   }
+
+  @media (max-width: 325px) {
+    padding: 3px 1px;
+    max-width: 25px;
+  }
 `;
 
 const WeekDayName = styled.div`
   font-weight: bold;
   font-size: 0.8rem;
+
+  @media (max-width: 325px) {
+    font-size: 0.7rem;
+  }
 `;
 
 const WeekDayDate = styled.div`
@@ -193,6 +207,7 @@ const WeekShiftItem = styled.div<{ color: string; index: number }>`
     font-size: 0.6rem;
     padding: 1px;
     min-height: 30px;
+    min-width: 30px;
   }
 `;
 
@@ -212,6 +227,7 @@ const WeekDayColumn = styled.div`
   flex: 1;
   border-right: 1px solid #ddd;
   min-height: 100%;
+  width: 20px;
 
   &:last-child {
     border-right: none;
