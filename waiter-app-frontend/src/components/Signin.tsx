@@ -8,24 +8,53 @@ const SignInContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #f0f0f0;
+  padding: 1rem;
+  box-sizing: border-box;
 `;
 
 const Header = styled.h1`
   font-size: 2.5rem;
   color: #333;
   margin-bottom: 2rem;
+  text-align: center;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 350px) {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
 `;
 
 const StyledForm = styled.form`
   display: flex;
   flex-direction: column;
-  width: 300px;
+  width: 100%;
+  max-width: 300px;
   background-color: white;
   padding: 2rem;
   border: 2px solid #333;
   border-radius: 10px;
+
+  @media (max-width: 480px) {
+    padding: 1.5rem;
+    width: 80%;
+  }
+
+  @media (max-width: 350px) {
+    padding: 1rem;
+    border-width: 1px;
+    
+  }
 `;
 
 const StyledInput = styled.input`
@@ -34,6 +63,14 @@ const StyledInput = styled.input`
   font-size: 1rem;
   border: 1px solid #333;
   border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 350px) {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+  }
 `;
 
 const StyledButton = styled.button`
@@ -51,11 +88,28 @@ const StyledButton = styled.button`
     transform: translateY(-2px);
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
+
+  @media (max-width: 480px) {
+    font-size: 1rem;
+  }
+
+  @media (max-width: 350px) {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    border-width: 1px;
+  }
 `;
 
 const ErrorMessage = styled.p`
   color: red;
   margin-top: 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+
+  @media (max-width: 350px) {
+    font-size: 0.8rem;
+    margin-top: 0.75rem;
+  }
 `;
 
 const SignIn: React.FC = () => {
