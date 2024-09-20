@@ -477,23 +477,12 @@ const WaiterDashboard: React.FC = () => {
   const currentUserId = parseInt(localStorage.getItem('userId') || '0');
   const [currentWeek, setCurrentWeek] = useState(moment().startOf("week"));
   const [selectedDate, setSelectedDate] = useState<moment.Moment | null>(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [notification, setNotification] = useState({ message: '', isVisible: false });
 
-  
   useEffect(() => {
     fetchAllShifts();
+  }, []);
 
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize();
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, [])
-  // users
   
 
   const fetchAllShifts = async () => {
@@ -722,18 +711,18 @@ const WaiterDashboard: React.FC = () => {
       </HeaderContainer>
       <CalendarContainer>
         <CalendarHeader>
-          <NavButton onClick={() => setCurrentWeek(moment(currentWeek).subtract(isMobile ? 1 : 7, "days"))}>
-            Previous {isMobile ? 'Day' : 'Week'}
+          <NavButton onClick={() => setCurrentWeek(moment(currentWeek).subtract(7, "days"))}>
+            Previous Week
           </NavButton>
           <CurrentMonthDisplay>
             {currentWeek.format('MMMM YYYY')}
           </CurrentMonthDisplay>
-          <NavButton onClick={() => setCurrentWeek(moment(currentWeek).add(isMobile ? 1 : 7, "days"))}>
-            Next {isMobile ? 'Day' : 'Week'}
+          <NavButton onClick={() => setCurrentWeek(moment(currentWeek).add(7, "days"))}>
+            Next Week
           </NavButton>
         </CalendarHeader>
         <CalendarBody>
-          {isMobile ? renderDailyView() : renderWeekView()}
+          {selectedDate ? renderDailyView() : renderWeekView()}
         </CalendarBody>
       </CalendarContainer>
       {shiftModal.isOpen && (
