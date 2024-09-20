@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import moment from 'moment';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
@@ -176,7 +176,7 @@ const WeekShiftItem = styled.div<{ color: string; index: number; isCurrentUser: 
   font-size: 0.7rem;
   overflow: hidden;
   cursor: pointer;
-  height: 20px;
+  height: 40px;
   border: ${props => props.isCurrentUser ? '2px solid #000' : 'none'};
 
   @media (max-width: 768px) {
@@ -478,13 +478,19 @@ const WaiterDashboard: React.FC = () => {
   const [currentWeek, setCurrentWeek] = useState(moment().startOf("week"));
   const [selectedDate, setSelectedDate] = useState<moment.Moment | null>(null);
   const [notification, setNotification] = useState({ message: '', isVisible: false });
-  
 
+  const showNotification = useCallback((message: string) => {
+    setNotification({ message, isVisible: true });
+  }, []);
 
-  const fetchAllShifts = async () => {
+  const hideNotification = useCallback(() => {
+    setNotification(prev => ({ ...prev, isVisible: false }));
+  }, []);
+
+  const fetchAllShifts = useCallback(async () => {
     try {
       const response = await fetchShifts();
-      console.log('Raw shifts response:', response.data); // Add this line for debugging
+      console.log('Raw shifts response:', response.data);
       const formattedShifts = response.data.map((shift: any) => ({
         id: shift.id,
         title: `${shift.user_name} - ${shift.shift_type}`,
@@ -495,28 +501,21 @@ const WaiterDashboard: React.FC = () => {
         shiftType: shift.shift_type
       }));
       setShifts(formattedShifts);
-      console.log('Formatted shifts:', formattedShifts); // Add this line for debugging
+      console.log('Formatted shifts:', formattedShifts);
     } catch (error: any) {
       console.error('Error fetching shifts:', error);
       showNotification(error.response?.data?.message || 'An error occurred while fetching shifts');
     }
-  };
-  
+  }, [showNotification]);
 
   useEffect(() => {
     fetchAllShifts();
   }, [fetchAllShifts]);
+
+
   
 
   // notifications
-
-  const showNotification = (message: string) => {
-    setNotification({ message, isVisible: true });
-  };
-
-  const hideNotification = () => {
-    setNotification(prev => ({ ...prev, isVisible: false }));
-  };
 
   // others
 
