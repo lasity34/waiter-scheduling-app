@@ -478,12 +478,8 @@ const WaiterDashboard: React.FC = () => {
   const [currentWeek, setCurrentWeek] = useState(moment().startOf("week"));
   const [selectedDate, setSelectedDate] = useState<moment.Moment | null>(null);
   const [notification, setNotification] = useState({ message: '', isVisible: false });
-
-  useEffect(() => {
-    fetchAllShifts();
-  }, []);
-
   
+
 
   const fetchAllShifts = async () => {
     try {
@@ -506,6 +502,10 @@ const WaiterDashboard: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    fetchAllShifts();
+  }, [fetchAllShifts]);
+  
 
   // notifications
 
