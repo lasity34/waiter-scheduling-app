@@ -480,8 +480,7 @@ const WaiterDashboard: React.FC = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [notification, setNotification] = useState({ message: '', isVisible: false });
 
-  isMobile;
-
+  
   useEffect(() => {
     fetchAllShifts();
 
@@ -723,18 +722,18 @@ const WaiterDashboard: React.FC = () => {
       </HeaderContainer>
       <CalendarContainer>
         <CalendarHeader>
-          <NavButton onClick={() => setCurrentWeek(moment(currentWeek).subtract(1, "week"))}>
-            Previous Week
+          <NavButton onClick={() => setCurrentWeek(moment(currentWeek).subtract(isMobile ? 1 : 7, "days"))}>
+            Previous {isMobile ? 'Day' : 'Week'}
           </NavButton>
           <CurrentMonthDisplay>
             {currentWeek.format('MMMM YYYY')}
           </CurrentMonthDisplay>
-          <NavButton onClick={() => setCurrentWeek(moment(currentWeek).add(1, "week"))}>
-            Next Week
+          <NavButton onClick={() => setCurrentWeek(moment(currentWeek).add(isMobile ? 1 : 7, "days"))}>
+            Next {isMobile ? 'Day' : 'Week'}
           </NavButton>
         </CalendarHeader>
         <CalendarBody>
-          {selectedDate ? renderDailyView() : renderWeekView()}
+          {isMobile ? renderDailyView() : renderWeekView()}
         </CalendarBody>
       </CalendarContainer>
       {shiftModal.isOpen && (
