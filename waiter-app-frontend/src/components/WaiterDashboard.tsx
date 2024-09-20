@@ -480,6 +480,8 @@ const WaiterDashboard: React.FC = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [notification, setNotification] = useState({ message: '', isVisible: false });
 
+  isMobile;
+
   useEffect(() => {
     fetchAllShifts();
 
@@ -493,6 +495,7 @@ const WaiterDashboard: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, [])
   // users
+  
 
   const fetchAllShifts = async () => {
     try {
