@@ -6,52 +6,42 @@ on:
       - main
     paths:
       - 'waiter-app-frontend/**'
-      
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-
+    - uses: actions/checkout@v3
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: eu-north-1
-
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'yarn'
+        cache-dependency-path: waiter-app-frontend/yarn.lock
     - name: Install Dependencies
       run: |
         cd waiter-app-frontend
         yarn install --frozen-lockfile
         yarn add @types/react-big-calendar
-
     - name: Build
       run: |
         cd waiter-app-frontend
         yarn build
       env:
         REACT_APP_API_BASE_URL: 'https://d1ozcmsi9wy8ty.cloudfront.net'
-
     - name: Deploy to S3
       run: aws s3 sync waiter-app-frontend/build/ s3://waiter-app-frontend --delete
-
-    - name: Check CloudFront Permissions
-      id: check_cloudfront_permissions
-      run: |
-        if aws cloudfront get-distribution --id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} &> /dev/null; then
-          echo "::set-output name=has_permission::true"
-        else
-          echo "::set-output name=has_permission::false"
-        fi
-
     - name: Invalidate CloudFront
-      if: steps.check_cloudfront_permissions.outputs.has_permission == 'true'
       run: |
-        aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
-
-    - name: CloudFront Invalidation Warning
-      if: steps.check_cloudfront_permissions.outputs.has_permission == 'false'
-      run: |
-        echo "Warning: Unable to invalidate CloudFront distribution. Please check your IAM permissions."
+        if aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"; then
+          echo "CloudFront invalidation created successfully."
+        else
+          echo "Failed to create CloudFront invalidation. Check your IAM permissions."
+          exit 1
+        fi

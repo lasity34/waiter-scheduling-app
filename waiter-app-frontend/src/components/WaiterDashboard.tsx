@@ -470,6 +470,7 @@ interface Shift {
 }
 
 
+
 const WaiterDashboard: React.FC = () => {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [shiftModal, setShiftModal] = useState({ isOpen: false, date: null as Date | null });
