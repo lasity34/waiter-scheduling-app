@@ -557,24 +557,27 @@ const ManagerDashboard: React.FC = () => {
   }, []);
 
   // Update the fetchShiftsData function to include the waiter's name
-const fetchShiftsData = async () => {
-  try {
-    const response = await fetchShifts();
-    const formattedShifts = response.data.map((shift: any) => ({
-      id: shift.id,
-      title: `${shift.user_name} - ${shift.shift_type}`,
-      start: new Date(`${shift.date}T${shift.start_time}`),
-      end: new Date(`${shift.date}T${shift.end_time}`),
-      userId: shift.user_id,
-      status: shift.status,
-      shiftType: shift.shift_type,
-      waiterName: shift.user_name, // Add this line to explicitly store the waiter's name
-    }));
-    setShifts(formattedShifts);
-  } catch (error) {
-    console.error("Error fetching shifts:", error);
-  }
-};
+  const fetchShiftsData = async () => {
+    try {
+      const response = await fetchShifts();
+      console.log("Raw shifts response (Manager):", response.data);
+      const formattedShifts = response.data.map((shift: any) => ({
+        id: shift.id,
+        title: `${shift.user_name} - ${shift.shift_type}`,
+        start: new Date(`${shift.date}T${shift.start_time}`),
+        end: new Date(`${shift.date}T${shift.end_time}`),
+        userId: shift.user_id,
+        status: shift.status,
+        shiftType: shift.shift_type,
+        waiterName: shift.user_name,
+      }));
+      console.log("Formatted shifts (Manager):", formattedShifts);
+      setShifts(formattedShifts);
+    } catch (error) {
+      console.error("Error fetching shifts:", error);
+    }
+  };
+
   const fetchUsersData = async () => {
     try {
       const response = await fetchUsers();

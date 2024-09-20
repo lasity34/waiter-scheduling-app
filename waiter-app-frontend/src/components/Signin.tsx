@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { login } from '../api';
+import { FaArrowLeft } from 'react-icons/fa';
 
 const SignInContainer = styled.div`
   display: flex;
@@ -53,7 +54,6 @@ const StyledForm = styled.form`
   @media (max-width: 350px) {
     padding: 1rem;
     border-width: 1px;
-    
   }
 `;
 
@@ -109,6 +109,28 @@ const ErrorMessage = styled.p`
   @media (max-width: 350px) {
     font-size: 0.8rem;
     margin-top: 0.75rem;
+  }
+`;
+
+const BackToHomeLink = styled(Link)`
+  display: flex;
+  align-items: center;
+  color: #333;
+  text-decoration: none;
+  font-size: 1rem;
+  margin-top: 1rem;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #555;
+  }
+
+  svg {
+    margin-right: 0.5rem;
+  }
+
+  @media (max-width: 350px) {
+    font-size: 0.9rem;
   }
 `;
 
@@ -169,6 +191,9 @@ const SignIn: React.FC = () => {
         <StyledButton type="submit">Sign In</StyledButton>
         {error && <ErrorMessage>{error}</ErrorMessage>}
       </StyledForm>
+      <BackToHomeLink to="/">
+        <FaArrowLeft /> Back to Home
+      </BackToHomeLink>
     </SignInContainer>
   );
 }
