@@ -501,6 +501,7 @@ const WaiterDashboard: React.FC = () => {
       showNotification(error.response?.data?.message || 'An error occurred while fetching shifts');
     }
   };
+  
 
   useEffect(() => {
     fetchAllShifts();
