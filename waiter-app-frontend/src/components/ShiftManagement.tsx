@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import moment from "moment";
-import axios from "axios";
 import styled from "styled-components";
 import { fetchShifts, createShift, updateShift, deleteShift, fetchUsers } from "../api";
 
