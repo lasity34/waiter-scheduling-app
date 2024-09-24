@@ -3,6 +3,10 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { login } from '../api';
 import { FaArrowLeft } from 'react-icons/fa';
+import axios from "axios";
+
+
+axios.defaults.withCredentials = true;
 
 const SignInContainer = styled.div`
   display: flex;
