@@ -144,7 +144,7 @@ const WeekShiftItem = styled.div<{ color: string; index: number }>`
   font-size: 0.7rem;
   overflow: hidden;
   cursor: pointer;
-  height: 20px;
+  height: 40px;
 
   @media (max-width: 768px) {
     font-size: 0.6rem;

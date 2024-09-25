@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000') + '/api';
+export const API_URL = (process.env.REACT_APP_API_BASE_URL || 'https://localhost:5000') + '/api';
 
    const api = axios.create({
      baseURL: API_URL,
@@ -9,6 +9,7 @@ export const API_URL = (process.env.REACT_APP_API_BASE_URL || 'http://localhost:
        'Content-Type': 'application/json',
      },
    });
+
 
 const logAndThrowError = (error: any) => {
   console.error('API Error:', error.response || error);
