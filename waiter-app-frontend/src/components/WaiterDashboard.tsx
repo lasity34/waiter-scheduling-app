@@ -502,7 +502,7 @@ const WaiterDashboard: React.FC = () => {
       });
   
       if (response.status === 201) {
-        showNotification('Shift added successfully. You will receive an email confirmation.');
+        showNotification(response.data.message || 'Shift added successfully. You will receive an email confirmation.');
       } else {
         showNotification('Shift added, but there was an issue sending the confirmation email.');
       }
