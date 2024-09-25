@@ -326,7 +326,12 @@ interface Shift {
     const fetchWaitersData = useCallback(async () => {
       try {
         const response = await fetchUsers();
-        setWaiters(response.data.filter((user: User) => user.role === "waiter"));
+        if (Array.isArray(response)) {
+          setWaiters(response.filter((user: User) => user.role === "waiter"));
+        } else {
+          console.error('Unexpected response format:', response);
+          showNotification("Failed to fetch waiters: Unexpected data format");
+        }
       } catch (error) {
         console.error("Error fetching users:", error);
         showNotification("Failed to fetch waiters");
