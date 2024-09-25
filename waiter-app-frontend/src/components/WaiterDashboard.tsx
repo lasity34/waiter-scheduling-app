@@ -3,7 +3,7 @@ import moment from 'moment';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { fetchShifts, createShift, logout } from '../api';
-
+import { useNotification } from './NotificationSystem';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -409,45 +409,9 @@ const BackToWeekButton = styled(StyledButton)`
   margin-top: 15px;
 `;
 
-const NotificationContainer = styled.div<{ isVisible: boolean }>`
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background-color: #4CAF50;
-  color: white;
-  padding: 16px;
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-  opacity: ${props => props.isVisible ? 1 : 0};
-  transform: ${props => props.isVisible ? 'translateY(0)' : 'translateY(-20px)'};
-  z-index: 1000;
-`;
 
 
-interface NotificationProps {
-  message: string;
-  isVisible: boolean;
-  onClose: () => void;
-}
 
-const Notification: React.FC<NotificationProps> = ({ message, isVisible, onClose }) => {
-  useEffect(() => {
-    if (isVisible) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [isVisible, onClose]);
-
-  return (
-    <NotificationContainer isVisible={isVisible}>
-      {message}
-    </NotificationContainer>
-  );
-};
 
 
 const ShiftTypeOrder = ['morning', 'double', 'evening'] as const;
@@ -478,20 +442,11 @@ const WaiterDashboard: React.FC = () => {
   const currentUserId = parseInt(localStorage.getItem('userId') || '0');
   const [currentWeek, setCurrentWeek] = useState(moment().startOf("week"));
   const [selectedDate, setSelectedDate] = useState<moment.Moment | null>(null);
-  const [notification, setNotification] = useState({ message: '', isVisible: false });
-
-  const showNotification = useCallback((message: string) => {
-    setNotification({ message, isVisible: true });
-  }, []);
-
-  const hideNotification = useCallback(() => {
-    setNotification(prev => ({ ...prev, isVisible: false }));
-  }, []);
+  const { showNotification } = useNotification();
 
   const fetchAllShifts = useCallback(async () => {
     try {
       const response = await fetchShifts();
-      console.log('Raw shifts response:', response.data);
       const formattedShifts = response.data.map((shift: any) => ({
         id: shift.id,
         title: `${shift.user_name} - ${shift.shift_type}`,
@@ -502,7 +457,6 @@ const WaiterDashboard: React.FC = () => {
         shiftType: shift.shift_type
       }));
       setShifts(formattedShifts);
-      console.log('Formatted shifts:', formattedShifts);
     } catch (error: any) {
       console.error('Error fetching shifts:', error);
       showNotification(error.response?.data?.message || 'An error occurred while fetching shifts');
@@ -513,12 +467,6 @@ const WaiterDashboard: React.FC = () => {
     fetchAllShifts();
   }, [fetchAllShifts]);
 
-
-  
-
-  // notifications
-
-  // others
 
   const handleDayClick = (day: moment.Moment) => {
     setSelectedDate(day);
@@ -546,14 +494,19 @@ const WaiterDashboard: React.FC = () => {
     }
 
     try {
-      await createShift({
+      const response = await createShift({
         date: shiftDate.format('YYYY-MM-DD'),
         start_time: startTime,
         end_time: endTime,
         shift_type: shiftType
       });
 
-      showNotification('Shift added successfully');
+      if (response.status === 201) {
+        showNotification('Shift added successfully. You will receive an email confirmation.');
+      } else {
+        showNotification('Shift added, but there was an issue sending the confirmation email.');
+      }
+
       fetchAllShifts();
       setShiftModal({ isOpen: false, date: null });
     } catch (error: any) {
@@ -740,11 +693,6 @@ const WaiterDashboard: React.FC = () => {
           </ButtonContainer>
         </ShiftModal>
       )}
-      <Notification 
-        message={notification.message}
-        isVisible={notification.isVisible}
-        onClose={hideNotification}
-      />
     </DashboardContainer>
   );
 };

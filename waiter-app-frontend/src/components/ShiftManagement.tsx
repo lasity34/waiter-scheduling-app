@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import moment from "moment";
 import styled from "styled-components";
 import { fetchShifts, createShift, updateShift, deleteShift, fetchUsers } from "../api";
+import { useNotification } from './NotificationSystem';
 
 const CalendarContainer = styled.div`
   flex-grow: 1;
@@ -286,13 +287,9 @@ interface Shift {
       isOpen: false,
       shift: null as Shift | null,
     });
+    const { showNotification } = useNotification();
   
-    useEffect(() => {
-      fetchShiftsData();
-      fetchWaitersData();
-    }, []);
-  
-    const fetchShiftsData = async () => {
+    const fetchShiftsData = useCallback(async () => {
       try {
         const response = await fetchShifts();
         const formattedShifts = response.data.map((shift: any) => ({
@@ -308,17 +305,26 @@ interface Shift {
         setShifts(formattedShifts);
       } catch (error) {
         console.error("Error fetching shifts:", error);
+        showNotification("Failed to fetch shifts");
       }
-    };
+    }, [showNotification]);
   
-    const fetchWaitersData = async () => {
+    const fetchWaitersData = useCallback(async () => {
       try {
         const response = await fetchUsers();
         setWaiters(response.data.filter((user: User) => user.role === "waiter"));
       } catch (error) {
         console.error("Error fetching users:", error);
+        showNotification("Failed to fetch waiters");
       }
-    };
+    }, [showNotification]);
+  
+    useEffect(() => {
+      fetchShiftsData();
+      fetchWaitersData();
+    }, [fetchShiftsData, fetchWaitersData]);
+  
+  
   
     const handleDayClick = (day: moment.Moment) => {
       setShiftModal({
@@ -340,7 +346,7 @@ interface Shift {
   
     const handleAddShift = async () => {
       if (!shiftModal.selectedWaiter || !shiftModal.shiftType || !shiftModal.date) {
-        alert("Please select a waiter and shift type");
+        showNotification("Please select a waiter and shift type");
         return;
       }
   
@@ -363,7 +369,7 @@ interface Shift {
       }
   
       try {
-        await createShift({
+        const response = await createShift({
           user_id: shiftModal.selectedWaiter,
           date: shiftDate.format("YYYY-MM-DD"),
           start_time: startTime,
@@ -371,14 +377,20 @@ interface Shift {
           shift_type: shiftModal.shiftType,
         });
   
-        alert("Shift added successfully");
+        if (response.status === 201) {
+          showNotification("Shift added successfully. Email notifications have been sent.");
+        } else {
+          showNotification("Shift added successfully, but there was an issue with email notifications.");
+        }
+  
         fetchShiftsData();
         closeShiftModal();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error adding shift:", error);
-        alert("Failed to add shift");
+        showNotification(error.response?.data?.message || "Failed to add shift");
       }
     };
+  
   
     const handleShiftUpdate = (shift: Shift) => {
       setEditShiftModal({ isOpen: true, shift });
@@ -407,11 +419,12 @@ interface Shift {
           start_time: startTime,
           end_time: endTime,
         });
+        showNotification("Shift updated successfully");
         fetchShiftsData();
         setEditShiftModal({ isOpen: false, shift: null });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error updating shift:", error);
-        alert("Failed to update shift");
+        showNotification(error.response?.data?.message || "Failed to update shift");
       }
     };
   
@@ -419,14 +432,15 @@ interface Shift {
       if (!editShiftModal.shift) return;
       try {
         await deleteShift(editShiftModal.shift.id);
+        showNotification("Shift removed successfully");
         fetchShiftsData();
         setEditShiftModal({ isOpen: false, shift: null });
-        alert("Shift removed successfully");
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error removing shift:", error);
-        alert("Failed to remove shift");
+        showNotification(error.response?.data?.message || "Failed to remove shift");
       }
     };
+  
   
     const renderWeekView = () => {
       const weekDays = [0, 1, 2, 3, 4, 5, 6].map((i) => moment(currentWeek).add(i, "days"));
