@@ -306,28 +306,35 @@ interface Shift {
     const fetchShiftsData = useCallback(async () => {
       try {
         const response = await fetchShifts();
-        const formattedShifts = response.data.map((shift: any) => ({
-          id: shift.id,
-          title: `${shift.user_name} - ${shift.shift_type}`,
-          start: new Date(`${shift.date}T${shift.start_time}`),
-          end: new Date(`${shift.date}T${shift.end_time}`),
-          userId: shift.user_id,
-          status: shift.status,
-          shiftType: shift.shift_type,
-          waiterName: shift.user_name,
-        }));
-        setShifts(formattedShifts);
+        if (response && response.data && Array.isArray(response.data)) {
+          const formattedShifts = response.data.map((shift: any) => ({
+            id: shift.id,
+            title: `${shift.user_name} - ${shift.shift_type}`,
+            start: new Date(`${shift.date}T${shift.start_time}`),
+            end: new Date(`${shift.date}T${shift.end_time}`),
+            userId: shift.user_id,
+            status: shift.status,
+            shiftType: shift.shift_type,
+            waiterName: shift.user_name,
+          }));
+          setShifts(formattedShifts);
+        } else {
+          console.error('Unexpected response format:', response);
+          showNotification("Failed to fetch shifts: Unexpected data format");
+        }
       } catch (error) {
         console.error("Error fetching shifts:", error);
         showNotification("Failed to fetch shifts");
       }
     }, [showNotification]);
   
+
+
     const fetchWaitersData = useCallback(async () => {
       try {
         const response = await fetchUsers();
-        if (Array.isArray(response)) {
-          setWaiters(response.filter((user: User) => user.role === "waiter"));
+        if (response && response.data && Array.isArray(response.data)) {
+          setWaiters(response.data.filter((user: User) => user.role === "waiter"));
         } else {
           console.error('Unexpected response format:', response);
           showNotification("Failed to fetch waiters: Unexpected data format");
@@ -338,10 +345,12 @@ interface Shift {
       }
     }, [showNotification]);
   
+
+
     useEffect(() => {
-      fetchShiftsData();
-      fetchWaitersData();
-    }, [fetchShiftsData, fetchWaitersData]);
+  fetchShiftsData();
+  fetchWaitersData();
+}, [fetchShiftsData, fetchWaitersData, currentWeek]);
   
   
   
