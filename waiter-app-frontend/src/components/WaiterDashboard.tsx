@@ -474,10 +474,10 @@ const WaiterDashboard: React.FC = () => {
 
   const handleAddShift = async (shiftType: ShiftType) => {
     if (!selectedDate) return;
-
+  
     const shiftDate = selectedDate;
     let startTime, endTime;
-
+  
     switch (shiftType) {
       case 'morning':
         startTime = '09:00';
@@ -492,7 +492,7 @@ const WaiterDashboard: React.FC = () => {
         endTime = '01:00';
         break;
     }
-
+  
     try {
       const response = await createShift({
         date: shiftDate.format('YYYY-MM-DD'),
@@ -500,13 +500,13 @@ const WaiterDashboard: React.FC = () => {
         end_time: endTime,
         shift_type: shiftType
       });
-
+  
       if (response.status === 201) {
         showNotification('Shift added successfully. You will receive an email confirmation.');
       } else {
         showNotification('Shift added, but there was an issue sending the confirmation email.');
       }
-
+  
       fetchAllShifts();
       setShiftModal({ isOpen: false, date: null });
     } catch (error: any) {
@@ -515,6 +515,7 @@ const WaiterDashboard: React.FC = () => {
     }
   };
 
+  
   const handleLogout = async () => {
     try {
       await logout();
