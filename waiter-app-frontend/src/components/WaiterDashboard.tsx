@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import moment from 'moment';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { fetchShifts, createShift, logout } from '../api';
 import { useNotification } from './NotificationSystem';
 
@@ -443,6 +443,20 @@ const WaiterDashboard: React.FC = () => {
   const [currentWeek, setCurrentWeek] = useState(moment().startOf("week"));
   const [selectedDate, setSelectedDate] = useState<moment.Moment | null>(null);
   const { showNotification } = useNotification();
+  const location = useLocation();
+
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const dateParam = params.get('date');
+    if (dateParam) {
+      const date = moment(dateParam);
+      if (date.isValid()) {
+        setCurrentWeek(date.startOf('week'));
+        setSelectedDate(date);
+      }
+    }
+  }, [location]);
 
   const fetchAllShifts = useCallback(async () => {
     try {

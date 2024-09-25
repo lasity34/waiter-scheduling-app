@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import moment from "moment";
+import { useLocation } from 'react-router-dom';
 import styled from "styled-components";
 import { fetchShifts, createShift, updateShift, deleteShift, fetchUsers } from "../api";
 import { useNotification } from './NotificationSystem';
@@ -288,6 +289,19 @@ interface Shift {
       shift: null as Shift | null,
     });
     const { showNotification } = useNotification();
+    const location = useLocation();
+
+
+    useEffect(() => {
+      const params = new URLSearchParams(location.search);
+      const dateParam = params.get('date');
+      if (dateParam) {
+        const date = moment(dateParam);
+        if (date.isValid()) {
+          setCurrentWeek(date.startOf('week'));
+        }
+      }
+    }, [location]);
   
     const fetchShiftsData = useCallback(async () => {
       try {
