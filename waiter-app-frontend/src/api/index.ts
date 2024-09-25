@@ -17,7 +17,6 @@ const logAndThrowError = (error: any) => {
 };
 
 
-
 // Response interceptor for logging
 api.interceptors.response.use(
   (response) => {
