@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "../api";
 import ShiftManagement from "./ShiftManagement";
 import UserManagement from "./UserManagement";
+import { useNotification } from "./NotificationSystem"
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -65,18 +66,18 @@ const Tab = styled.button<{ active: boolean }>`
 const ManagerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"shifts" | "users">("shifts");
   const navigate = useNavigate();
+  const { showNotification } = useNotification()
 
   const handleLogout = async () => {
     try {
       await logout();
-      localStorage.removeItem("user");
-      localStorage.removeItem("userId");
-      navigate("/", {
-        state: { message: "You have been successfully logged out." },
-      });
-    } catch (error) {
-      console.error("Error logging out:", error);
-      alert("Failed to log out");
+      localStorage.removeItem('user');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('authToken');
+      navigate('/', { state: { message: 'You have been successfully logged out.' } });
+    } catch (error: any) {
+      console.error('Error logging out:', error);
+      showNotification(error.response?.data?.message || 'Failed to log out');
     }
   };
 

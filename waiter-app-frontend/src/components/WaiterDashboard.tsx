@@ -535,6 +535,7 @@ const WaiterDashboard: React.FC = () => {
       await logout();
       localStorage.removeItem('user');
       localStorage.removeItem('userId');
+      localStorage.removeItem('authToken'); // Add this line
       navigate('/', { state: { message: 'You have been successfully logged out.' } });
     } catch (error: any) {
       console.error('Error logging out:', error);

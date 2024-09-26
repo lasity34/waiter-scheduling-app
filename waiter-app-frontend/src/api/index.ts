@@ -45,8 +45,40 @@ api.interceptors.response.use(
   }
 );
 
-export const login = (email: string, password: string) => 
-  api.post('/login', { email, password }).catch(logAndThrowError);
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token has expired or is invalid
+      localStorage.removeItem('authToken');
+      // Redirect to login page
+      window.location.href = '/signin';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const login = async (email: string, password: string) => {
+  try {
+    const response = await api.post('/login', { email, password });
+    localStorage.setItem('authToken', response.data.auth_token);
+    return response;
+  } catch (error) {
+    logAndThrowError(error);
+  }
+};
 
 export const fetchShifts = () => 
   api.get('/shifts').catch(logAndThrowError);
@@ -72,8 +104,15 @@ export const updateUser = (userId: number, userData: any) =>
 export const deleteUser = (userId: number) => 
   api.delete(`/users/${userId}`).catch(logAndThrowError);
 
-export const logout = () => 
-  api.get('/logout').catch(logAndThrowError);
+export const logout = async () => {
+  try {
+    const response = await api.get('/logout');
+    localStorage.removeItem('authToken');
+    return response;
+  } catch (error) {
+    logAndThrowError(error);
+  }
+};
 
 export const changePassword = (currentPassword: string, newPassword: string) => 
   api.post('/change_password', { current_password: currentPassword, new_password: newPassword }).catch(logAndThrowError);

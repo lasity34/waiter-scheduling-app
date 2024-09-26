@@ -164,12 +164,16 @@ const SignIn: React.FC = () => {
     try {
       const response = await login(email, password);
       console.log('Login response:', response);
-
+  
       if (response.data && response.data.role) {
         localStorage.setItem('userRole', response.data.role);
         localStorage.setItem('userName', response.data.name);
         localStorage.setItem('userId', response.data.id.toString());
-
+        // Store the auth token if your backend provides one
+        if (response.data.token) {
+          localStorage.setItem('authToken', response.data.token);
+        }
+  
         navigate(response.data.role === 'waiter' ? '/waiter-dashboard' : '/manager-dashboard');
       } else {
         setError('Invalid response from server');
