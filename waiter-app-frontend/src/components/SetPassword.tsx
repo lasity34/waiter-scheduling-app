@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { setPassword, resetPassword } from '../api';
+import { useNotification } from './NotificationSystem';
 
 const Form = styled.form`
   display: flex;
@@ -38,6 +39,7 @@ const SetPassword: React.FC = () => {
   const [error, setError] = useState('');
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,8 +54,8 @@ const SetPassword: React.FC = () => {
       } else {
         await setPassword(token!, password);
       }
-      alert('Password set successfully');
-      navigate('/login');
+      showNotification('Password set successfully');
+      navigate('/signin');
     } catch (err) {
       setError('An error occurred. Please try again.');
     }

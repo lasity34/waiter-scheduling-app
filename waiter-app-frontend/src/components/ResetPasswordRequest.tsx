@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { resetPasswordRequest } from '../api';
+import { useNotification } from './NotificationSystem';
 
 const Form = styled.form`
   display: flex;
@@ -27,28 +28,23 @@ const Button = styled.button`
   }
 `;
 
-const Message = styled.p`
-  color: green;
-`;
-
 const ErrorMessage = styled.p`
   color: red;
 `;
 
 const ResetPasswordRequest: React.FC = () => {
   const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const { showNotification } = useNotification();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await resetPasswordRequest(email);
-      setMessage('If an account with that email exists, we have sent a password reset link.');
+      showNotification('If an account with that email exists, we have sent a password reset link.');
       setError('');
     } catch (err) {
       setError('An error occurred. Please try again.');
-      setMessage('');
     }
   };
 
@@ -63,7 +59,6 @@ const ResetPasswordRequest: React.FC = () => {
         required
       />
       <Button type="submit">Request Password Reset</Button>
-      {message && <Message>{message}</Message>}
       {error && <ErrorMessage>{error}</ErrorMessage>}
     </Form>
   );
