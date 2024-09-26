@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { login } from '../api';
 import { FaArrowLeft } from 'react-icons/fa';
 import axios from "axios";
+import { useNotification } from './NotificationSystem';
 
 
 axios.defaults.withCredentials = true;
@@ -157,6 +158,7 @@ const SignIn: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const role = new URLSearchParams(location.search).get('role');
+  const { showNotification } = useNotification();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -164,28 +166,28 @@ const SignIn: React.FC = () => {
     try {
       const response = await login(email, password);
       console.log('Login response:', response);
-  
-      if (response.data && response.data.role) {
+
+      if (response && response.data && response.data.role) {
         localStorage.setItem('userRole', response.data.role);
         localStorage.setItem('userName', response.data.name);
         localStorage.setItem('userId', response.data.id.toString());
-        // Store the auth token if your backend provides one
         if (response.data.token) {
           localStorage.setItem('authToken', response.data.token);
         }
-  
+
+        showNotification(`Welcome, ${response.data.name}!`);
         navigate(response.data.role === 'waiter' ? '/waiter-dashboard' : '/manager-dashboard');
       } else {
-        setError('Invalid response from server');
+        throw new Error('Invalid response from server');
       }
     } catch (error: any) {
       console.error('Sign in error:', error);
-      if (error.response) {
+      if (axios.isAxiosError(error) && error.response) {
         setError(error.response.data?.message || 'An error occurred during sign in');
-      } else if (error.request) {
+      } else if (axios.isAxiosError(error) && error.request) {
         setError('No response received from server');
       } else {
-        setError('An unexpected error occurred');
+        setError(error.message || 'An unexpected error occurred');
       }
     }
   };
