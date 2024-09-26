@@ -21,6 +21,7 @@ const api = axios.create({
 
 
 
+
 const logAndThrowError = (error: AxiosError) => {
   console.error('API Error:', error.response || error);
   throw error;
