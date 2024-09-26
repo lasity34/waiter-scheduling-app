@@ -47,7 +47,7 @@ api.interceptors.response.use(
         // Token expired, update with new token
         localStorage.setItem('authToken', data.new_token);
         if (error.config) {
-          error.config.headers['Authorization'] = data.new_token;
+          error.config.headers['Authorization'] = `Bearer ${data.new_token}`;
           return axios.request(error.config);
         }
       } else {

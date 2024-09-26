@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../api";
@@ -68,6 +68,14 @@ const ManagerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"shifts" | "users">("shifts");
   const navigate = useNavigate();
   const { showNotification } = useNotification()
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+  }, []);
+  
 
   const handleLogout = async () => {
     try {

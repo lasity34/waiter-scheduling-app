@@ -166,16 +166,16 @@ const SignIn: React.FC = () => {
     try {
       const response = await login(email, password);
       console.log('Login response:', response);
-
+  
       if (response && response.data && response.data.auth_token) {
         localStorage.setItem('authToken', response.data.auth_token);
         localStorage.setItem('userRole', response.data.role);
         localStorage.setItem('userName', response.data.name);
         localStorage.setItem('userId', response.data.id.toString());
-
+  
         // Set the default Authorization header for all future requests
-        axios.defaults.headers.common['Authorization'] = response.data.auth_token;
-
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.auth_token}`;
+  
         showNotification(`Welcome, ${response.data.name}!`);
         navigate(response.data.role === 'waiter' ? '/waiter-dashboard' : '/manager-dashboard');
       } else {
