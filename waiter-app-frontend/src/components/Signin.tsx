@@ -138,6 +138,18 @@ const BackToHomeLink = styled(Link)`
   }
 `;
 
+
+const ForgotPasswordLink = styled(Link)`
+  margin-top: 1rem;
+  text-align: center;
+  color: #007bff;
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -194,6 +206,7 @@ const SignIn: React.FC = () => {
         />
         <StyledButton type="submit">Sign In</StyledButton>
         {error && <ErrorMessage>{error}</ErrorMessage>}
+        <ForgotPasswordLink to="/reset-password-request">Forgot Password?</ForgotPasswordLink>
       </StyledForm>
       <BackToHomeLink to="/">
         <FaArrowLeft /> Back to Home

@@ -75,3 +75,15 @@ export const deleteUser = (userId: number) =>
 export const logout = () => 
   api.get('/logout').catch(logAndThrowError);
 
+export const changePassword = (currentPassword: string, newPassword: string) => 
+  api.post('/change_password', { current_password: currentPassword, new_password: newPassword }).catch(logAndThrowError);
+
+
+export const resetPasswordRequest = (email: string) => 
+  api.post('/reset_password_request', { email }).catch(logAndThrowError);
+
+export const resetPassword = (token: string, password: string) => 
+  api.post('/reset_password', { token, password }).catch(logAndThrowError);
+
+export const setPassword = (token: string, password: string) => 
+  api.post('/set_password', { token, password }).catch(logAndThrowError);

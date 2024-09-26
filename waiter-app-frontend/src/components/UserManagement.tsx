@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { fetchUsers, createUser, updateUser, deleteUser } from "../api";
+import { fetchUsers, createUser, updateUser, deleteUser, changePassword, resetPasswordRequest } from "../api";
 
 const UserManagementContainer = styled.div`
   padding: 20px;
@@ -114,11 +114,16 @@ const ConfirmationButtons = styled.div`
   gap: 10px;
 `;
 
+const PasswordChangeForm = styled(Form)`
+  margin-top: 20px;
+`;
+
 interface User {
   id: number;
   name: string;
   email: string;
   role: string;
+  password_set?: boolean;
 }
 
 interface ConfirmationState {
@@ -128,13 +133,24 @@ interface ConfirmationState {
   newRole?: string;
 }
 
+interface PasswordChangeData {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+
+
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [newUser, setNewUser] = useState({
+  const [newUser, setNewUser] = useState<any>({
     name: "",
     email: "",
-    password: "",
     role: "waiter",
+  });
+  const [passwordChangeData, setPasswordChangeData] = useState<PasswordChangeData>({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
   });
   const [confirmation, setConfirmation] = useState<ConfirmationState>({
     isOpen: false,
@@ -142,11 +158,13 @@ const UserManagement: React.FC = () => {
     action: null,
   });
 
+
   useEffect(() => {
     fetchUsersData();
-  }, []);
+  }, [])
 
-  const fetchUsersData = async () => {
+
+ const fetchUsersData = async () => {
     try {
       const response = await fetchUsers();
       setUsers(response.data);
@@ -155,16 +173,51 @@ const UserManagement: React.FC = () => {
     }
   };
 
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await createUser(newUser);
-      alert("User created successfully");
-      setNewUser({ name: "", email: "", password: "", role: "waiter" });
+      alert("User created successfully. A password setup link has been sent to their email.");
+      setNewUser({ name: "", email: "", role: "waiter" });
       fetchUsersData();
     } catch (error) {
       console.error("Error creating user:", error);
       alert("Failed to create user");
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordChangeData.newPassword !== passwordChangeData.confirmNewPassword) {
+      alert("New passwords do not match");
+      return;
+    }
+    try {
+      await changePassword(passwordChangeData.currentPassword, passwordChangeData.newPassword);
+      alert("Password changed successfully");
+      setPasswordChangeData({
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      alert("Failed to change password");
+    }
+  };
+
+
+  const handleResendPasswordLink = async (userId: number) => {
+    try {
+      const user = users.find(u => u.id === userId);
+      if (user) {
+        await resetPasswordRequest(user.email);
+        alert("Password setup link has been resent to the user's email.");
+      }
+    } catch (error) {
+      console.error("Error resending password link:", error);
+      alert("Failed to resend password link");
     }
   };
 
@@ -220,6 +273,7 @@ const UserManagement: React.FC = () => {
               <UserItem key={user.id}>
                 <UserInfo>
                   <strong>{user.name}</strong> ({user.email})
+                  {!user.password_set && <span> - Password not set</span>}
                 </UserInfo>
                 <UserActions>
                   <ToggleButton
@@ -233,6 +287,11 @@ const UserManagement: React.FC = () => {
                   >
                     {user.role === "waiter" ? "Make Manager" : "Make Waiter"}
                   </ToggleButton>
+                  {!user.password_set && (
+                    <ActionButton onClick={() => handleResendPasswordLink(user.id)}>
+                      Resend Password Link
+                    </ActionButton>
+                  )}
                   <RemoveButton
                     onClick={() => openConfirmation(user.id, "remove")}
                   >
@@ -266,13 +325,6 @@ const UserManagement: React.FC = () => {
           onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
           required
         />
-        <Input
-          type="password"
-          placeholder="Password"
-          value={newUser.password}
-          onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-          required
-        />
         <Select
           value={newUser.role}
           onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
@@ -282,7 +334,32 @@ const UserManagement: React.FC = () => {
         </Select>
         <Button type="submit">Create User</Button>
       </Form>
-
+      
+      <h3>Change Password</h3>
+      <PasswordChangeForm onSubmit={handlePasswordChange}>
+        <Input
+          type="password"
+          placeholder="Current Password"
+          value={passwordChangeData.currentPassword}
+          onChange={(e) => setPasswordChangeData({ ...passwordChangeData, currentPassword: e.target.value })}
+          required
+        />
+        <Input
+          type="password"
+          placeholder="New Password"
+          value={passwordChangeData.newPassword}
+          onChange={(e) => setPasswordChangeData({ ...passwordChangeData, newPassword: e.target.value })}
+          required
+        />
+        <Input
+          type="password"
+          placeholder="Confirm New Password"
+          value={passwordChangeData.confirmNewPassword}
+          onChange={(e) => setPasswordChangeData({ ...passwordChangeData, confirmNewPassword: e.target.value })}
+          required
+        />
+        <Button type="submit">Change Password</Button>
+      </PasswordChangeForm>
       <h3>User List</h3>
       {renderUserList()}
 
