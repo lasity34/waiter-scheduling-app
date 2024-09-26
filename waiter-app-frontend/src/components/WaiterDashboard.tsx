@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { fetchShifts, createShift, logout } from '../api';
 import { useNotification } from './NotificationSystem';
+import axios from 'axios';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -447,6 +448,14 @@ const WaiterDashboard: React.FC = () => {
 
 
   useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = token;
+    }
+  }, []);
+
+
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     const dateParam = params.get('date');
     if (dateParam) {
@@ -457,6 +466,8 @@ const WaiterDashboard: React.FC = () => {
       }
     }
   }, [location]);
+
+
 
   const fetchAllShifts = useCallback(async () => {
     try {
@@ -473,9 +484,17 @@ const WaiterDashboard: React.FC = () => {
       setShifts(formattedShifts);
     } catch (error: any) {
       console.error('Error fetching shifts:', error);
-      showNotification(error.response?.data?.message || 'An error occurred while fetching shifts');
+      if (error.response && error.response.status === 401) {
+        showNotification('Your session has expired. Please log in again.');
+        navigate('/');
+      } else {
+        showNotification(error.response?.data?.message || 'An error occurred while fetching shifts');
+      }
     }
-  }, [showNotification]);
+  }, [showNotification, navigate]);
+
+
+
 
   useEffect(() => {
     fetchAllShifts();
@@ -535,7 +554,8 @@ const WaiterDashboard: React.FC = () => {
       await logout();
       localStorage.removeItem('user');
       localStorage.removeItem('userId');
-      localStorage.removeItem('authToken'); // Add this line
+      localStorage.removeItem('authToken');
+      delete axios.defaults.headers.common['Authorization'];
       navigate('/', { state: { message: 'You have been successfully logged out.' } });
     } catch (error: any) {
       console.error('Error logging out:', error);

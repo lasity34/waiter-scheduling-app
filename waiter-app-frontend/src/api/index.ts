@@ -1,21 +1,19 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 export const API_URL = (process.env.REACT_APP_API_BASE_URL || 'https://localhost:5000') + '/api';
 
-   const api = axios.create({
-     baseURL: API_URL,
-     withCredentials: true,
-     headers: {
-       'Content-Type': 'application/json',
-     },
-   });
+const api = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-
-const logAndThrowError = (error: any) => {
+const logAndThrowError = (error: AxiosError) => {
   console.error('API Error:', error.response || error);
   throw error;
 };
-
 
 // Response interceptor for logging
 api.interceptors.response.use(
@@ -45,7 +43,6 @@ api.interceptors.response.use(
   }
 );
 
-
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken');
   if (token) {
@@ -55,7 +52,6 @@ api.interceptors.request.use((config) => {
 }, (error) => {
   return Promise.reject(error);
 });
-
 
 api.interceptors.response.use(
   (response) => response,
@@ -76,12 +72,11 @@ export const login = async (email: string, password: string) => {
     localStorage.setItem('authToken', response.data.auth_token);
     return response;
   } catch (error) {
-    logAndThrowError(error);
+    return logAndThrowError(error as AxiosError);
   }
 };
 
-export const fetchShifts = () => 
-  api.get('/shifts').catch(logAndThrowError);
+export const fetchShifts = () => api.get('/shifts').catch(logAndThrowError);
 
 export const createShift = (shiftData: any) => 
   api.post('/shifts', shiftData).catch(logAndThrowError);
@@ -110,13 +105,12 @@ export const logout = async () => {
     localStorage.removeItem('authToken');
     return response;
   } catch (error) {
-    logAndThrowError(error);
+    return logAndThrowError(error as AxiosError);
   }
 };
 
 export const changePassword = (currentPassword: string, newPassword: string) => 
   api.post('/change_password', { current_password: currentPassword, new_password: newPassword }).catch(logAndThrowError);
-
 
 export const resetPasswordRequest = (email: string) => 
   api.post('/reset_password_request', { email }).catch(logAndThrowError);
