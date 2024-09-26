@@ -1,47 +1,30 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
+import { createBrowserHistory } from 'history';
 
 export const API_URL = (process.env.REACT_APP_API_BASE_URL || 'https://localhost:5000') + '/api';
+
+const history = createBrowserHistory();
+
+interface ErrorResponse {
+  message: string;
+  new_token?: string;
+}
 
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
+  timeout: 10000, // Increase timeout to 10 seconds
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+
+
 const logAndThrowError = (error: AxiosError) => {
   console.error('API Error:', error.response || error);
   throw error;
 };
-
-// Response interceptor for logging
-api.interceptors.response.use(
-  (response) => {
-    console.log('API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-      data: response.data,
-    });
-    return response;
-  },
-  (error) => {
-    if (error.response) {
-      console.error('API Error Response:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        headers: error.response.headers,
-        data: error.response.data,
-      });
-    } else if (error.request) {
-      console.error('API Request Error:', error.request);
-    } else {
-      console.error('API Error:', error.message);
-    }
-    return Promise.reject(error);
-  }
-);
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken');
@@ -54,21 +37,44 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
+  (response: AxiosResponse) => response,
+  async (error: AxiosError) => {
     if (error.response && error.response.status === 401) {
-      // Token has expired or is invalid
-      localStorage.removeItem('authToken');
-      // Redirect to login page
-      window.location.href = '/signin';
+      const data = error.response.data as ErrorResponse;
+      
+      if (data && typeof data === 'object' && 'new_token' in data && typeof data.new_token === 'string') {
+        // Token expired, update with new token
+        localStorage.setItem('authToken', data.new_token);
+        if (error.config) {
+          error.config.headers['Authorization'] = data.new_token;
+          return axios.request(error.config);
+        }
+      } else {
+        // Other 401 error, remove token and redirect to signin
+        localStorage.removeItem('authToken');
+        history.push('/signin');
+      }
     }
     return Promise.reject(error);
   }
 );
 
+
+const retryRequest = async (fn: () => Promise<AxiosResponse>, retries = 3, delay = 1000): Promise<AxiosResponse> => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries > 0 && axios.isAxiosError(error) && (!error.response || error.response.status >= 500)) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryRequest(fn, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+};
+
 export const login = async (email: string, password: string) => {
   try {
-    const response = await api.post('/login', { email, password });
+    const response = await retryRequest(() => api.post('/login', { email, password }));
     localStorage.setItem('authToken', response.data.auth_token);
     return response;
   } catch (error) {
@@ -76,32 +82,32 @@ export const login = async (email: string, password: string) => {
   }
 };
 
-export const fetchShifts = () => api.get('/shifts').catch(logAndThrowError);
+export const fetchShifts = () => retryRequest(() => api.get('/shifts')).catch(logAndThrowError);
 
 export const createShift = (shiftData: any) => 
-  api.post('/shifts', shiftData).catch(logAndThrowError);
+  retryRequest(() => api.post('/shifts', shiftData)).catch(logAndThrowError);
 
 export const updateShift = (shiftId: number, shiftData: any) => 
-  api.put(`/shifts/${shiftId}`, shiftData).catch(logAndThrowError);
+  retryRequest(() => api.put(`/shifts/${shiftId}`, shiftData)).catch(logAndThrowError);
 
 export const deleteShift = (shiftId: number) => 
-  api.delete(`/shifts/${shiftId}`).catch(logAndThrowError);
+  retryRequest(() => api.delete(`/shifts/${shiftId}`)).catch(logAndThrowError);
 
 export const fetchUsers = () => 
-  api.get('/users').catch(logAndThrowError);
+  retryRequest(() => api.get('/users')).catch(logAndThrowError);
 
 export const createUser = (userData: any) => 
-  api.post('/users', userData).catch(logAndThrowError);
+  retryRequest(() => api.post('/users', userData)).catch(logAndThrowError);
 
 export const updateUser = (userId: number, userData: any) => 
-  api.put(`/users/${userId}`, userData).catch(logAndThrowError);
+  retryRequest(() => api.put(`/users/${userId}`, userData)).catch(logAndThrowError);
 
 export const deleteUser = (userId: number) => 
-  api.delete(`/users/${userId}`).catch(logAndThrowError);
+  retryRequest(() => api.delete(`/users/${userId}`)).catch(logAndThrowError);
 
 export const logout = async () => {
   try {
-    const response = await api.get('/logout');
+    const response = await retryRequest(() => api.get('/logout'));
     localStorage.removeItem('authToken');
     return response;
   } catch (error) {

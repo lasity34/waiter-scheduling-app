@@ -5,6 +5,7 @@ import { logout } from "../api";
 import ShiftManagement from "./ShiftManagement";
 import UserManagement from "./UserManagement";
 import { useNotification } from "./NotificationSystem"
+import axios from 'axios';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -71,9 +72,17 @@ const ManagerDashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
+      // Clear all user-related data from local storage
       localStorage.removeItem('user');
       localStorage.removeItem('userId');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userName');
       localStorage.removeItem('authToken');
+      
+      // Reset axios default headers
+      delete axios.defaults.headers.common['Authorization'];
+      
+      // Navigate to the home page with a logout message
       navigate('/', { state: { message: 'You have been successfully logged out.' } });
     } catch (error: any) {
       console.error('Error logging out:', error);

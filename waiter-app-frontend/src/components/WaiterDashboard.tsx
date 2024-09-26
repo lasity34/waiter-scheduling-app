@@ -486,7 +486,7 @@ const WaiterDashboard: React.FC = () => {
       console.error('Error fetching shifts:', error);
       if (error.response && error.response.status === 401) {
         showNotification('Your session has expired. Please log in again.');
-        navigate('/');
+        navigate('/signin');
       } else {
         showNotification(error.response?.data?.message || 'An error occurred while fetching shifts');
       }
@@ -552,17 +552,23 @@ const WaiterDashboard: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
+      // Clear all user-related data from local storage
       localStorage.removeItem('user');
       localStorage.removeItem('userId');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userName');
       localStorage.removeItem('authToken');
+      
+      // Reset axios default headers
       delete axios.defaults.headers.common['Authorization'];
+      
+      // Navigate to the home page with a logout message
       navigate('/', { state: { message: 'You have been successfully logged out.' } });
     } catch (error: any) {
       console.error('Error logging out:', error);
       showNotification(error.response?.data?.message || 'Failed to log out');
     }
   };
-
 
   const getShiftColor = (shiftType: string) => {
     switch (shiftType) {
