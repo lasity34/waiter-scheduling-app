@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import { fetchUsers, createUser, updateUser, deleteUser, changePassword, resetPasswordRequest } from "../api";
+import { useNotification } from "./NotificationSystem";
 
 const UserManagementContainer = styled.div`
   padding: 20px;
@@ -158,44 +159,47 @@ const UserManagement: React.FC = () => {
     action: null,
   });
 
+  const { showNotification } = useNotification();
 
-  useEffect(() => {
-    fetchUsersData();
-  }, [])
+ 
 
 
- const fetchUsersData = async () => {
+  const fetchUsersData = useCallback(async () => {
     try {
       const response = await fetchUsers();
       setUsers(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);
+      showNotification("Failed to fetch users");
     }
-  };
+  }, [showNotification]);
 
+  useEffect(() => {
+    fetchUsersData();
+  }, [fetchUsersData]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await createUser(newUser);
-      alert("User created successfully. A password setup link has been sent to their email.");
+      showNotification("User created successfully. A password setup link has been sent to their email.");
       setNewUser({ name: "", email: "", role: "waiter" });
       fetchUsersData();
     } catch (error) {
       console.error("Error creating user:", error);
-      alert("Failed to create user");
+      showNotification("Failed to create user");
     }
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordChangeData.newPassword !== passwordChangeData.confirmNewPassword) {
-      alert("New passwords do not match");
+      showNotification("New passwords do not match");
       return;
     }
     try {
       await changePassword(passwordChangeData.currentPassword, passwordChangeData.newPassword);
-      alert("Password changed successfully");
+      showNotification("Password changed successfully");
       setPasswordChangeData({
         currentPassword: "",
         newPassword: "",
@@ -203,7 +207,7 @@ const UserManagement: React.FC = () => {
       });
     } catch (error) {
       console.error("Error changing password:", error);
-      alert("Failed to change password");
+      showNotification("Failed to change password");
     }
   };
 
@@ -213,11 +217,11 @@ const UserManagement: React.FC = () => {
       const user = users.find(u => u.id === userId);
       if (user) {
         await resetPasswordRequest(user.email);
-        alert("Password setup link has been resent to the user's email.");
+        showNotification("Password setup link has been resent to the user's email.");
       }
     } catch (error) {
       console.error("Error resending password link:", error);
-      alert("Failed to resend password link");
+      showNotification("Failed to resend password link");
     }
   };
 
@@ -239,19 +243,20 @@ const UserManagement: React.FC = () => {
     try {
       if (confirmation.action === "remove") {
         await deleteUser(confirmation.userId);
-        alert("User has been removed successfully");
+        showNotification("User has been removed successfully");
       } else if (confirmation.action === "toggle" && confirmation.newRole) {
         await updateUser(confirmation.userId, { role: confirmation.newRole });
-        alert(`User's role has been updated to ${confirmation.newRole}`);
+        showNotification(`User's role has been updated to ${confirmation.newRole}`);
       }
       fetchUsersData();
     } catch (error) {
       console.error("Error performing action:", error);
-      alert("Failed to perform action");
+      showNotification("Failed to perform action");
     }
 
     closeConfirmation();
   };
+
 
   const renderUserList = () => {
     const groupedUsers = users.reduce((acc, user) => {
