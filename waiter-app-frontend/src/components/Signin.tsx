@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { login } from '../api';
@@ -157,8 +157,16 @@ const SignIn: React.FC = () => {
   const [error, setError] = useState<string>('');
   const location = useLocation();
   const navigate = useNavigate();
-  const role = new URLSearchParams(location.search).get('role');
   const { showNotification } = useNotification();
+
+  const [role, setRole] = useState<string | null>(null);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setRole(params.get('role'));
+    setRedirectPath(params.get('redirect'));
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -177,7 +185,13 @@ const SignIn: React.FC = () => {
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.auth_token}`;
   
         showNotification(`Welcome, ${response.data.name}!`);
-        navigate(response.data.role === 'waiter' ? '/waiter-dashboard' : '/manager-dashboard');
+        
+        // Navigate to the redirect path if it exists, otherwise to the dashboard
+        if (redirectPath) {
+          navigate(redirectPath);
+        } else {
+          navigate(response.data.role === 'waiter' ? '/waiter-dashboard' : '/manager-dashboard');
+        }
       } else {
         throw new Error('Invalid response from server');
       }
